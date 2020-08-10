@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Line</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        #canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id='canvas'></canvas>
+</body>
+<script>
+    const canvas = document.getElementById('canvas')
+    canvas.width = document.documentElement.clientWidth
+    canvas.height = document.documentElement.clientHeight
+
+    const ctx = canvas.getContext('2d')
+    ctx.strokeStyle = 'black'
+    ctx.lineWidth = 6
+    ctx.lineCap = 'round'
+    let isPatting = false
+    let last
+
+    if ('ontouchstart' in document.documentElement) {
+        canvas.ontouchstart = (e => {
+            isPatting = true
+            const touche = e.touches[0]
+            let x = touche.clientX
+            let y = touche.clientY
+            last = { x, y }
+        })
+        canvas.ontouchmove = (e => {
+            if (isPatting) {
+                const touche = e.touches[0]
+                let x = touche.clientX
+                let y = touche.clientY
+                draw(last.x, last.y, x, y)
+                last = { x, y }
+            }
+        })
+        canvas.ontouchend = () => {
+            isPatting = false
+        }
+    } else {
+        canvas.onmousedown = (e => {
+            isPatting = true
+            let x = e.clientX
+            let y = e.clientY
+            last = { x, y }
+        })
+        canvas.onmousemove = (e => {
+            if (isPatting) {
+                let x = e.clientX
+                let y = e.clientY
+                draw(last.x, last.y, x, y)
+                last = { x, y }
+            }
+        })
+        canvas.onmouseup = (e => {
+            isPatting = false
+        })
+    }
+
+    function draw(x1, y1, x2, y2) {
+        ctx.beginPath()
+        ctx.moveTo(x1, y1)
+        ctx.lineTo(x2, y2)
+        ctx.stroke()
+    }
+
+</script>
+</html>
