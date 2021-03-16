@@ -1,0 +1,197 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<style type="text/css">
+			*{
+				margin: 0;
+				padding: 0;
+			}
+			#canvas{
+				background: #000;
+				display: block;	/*文本和图片默认的垂直方式，canvas是一张图片*/
+			}
+		</style>
+	</head>
+	<body>
+		
+		<canvas id="canvas" width="" height="">
+			//您的浏览器不支持canvas
+		</canvas>
+		
+		<script type="text/javascript">
+			
+			console.log(navigator.userAgent)
+			
+			/*
+			//绘制圆	参数  圆心的x和y轴，r半径，   0-360  ，顺逆时针
+			context.beginPath();	//开始路径
+			context.arc(200,200,100,0,Math.PI*2,false)
+			context.fillStyle = "red"	//填充颜色
+			context.fill();//开始绘制实心圆
+			
+			//绘制线条
+			context.beginPath();//开始新路径，这样的话就不会绘制到上面的圆
+			context.moveTo(350,350);	//画笔移动到这个点
+			context.lineTo(450,450);		//绘制到这个点
+			context.lineTo(550,450);
+			context.closePath();//闭合路径	首位自动相接
+			context.strokeStyle = "#fff"		//触笔方法的颜色
+			context.stroke();   //触笔方法 	开始绘制线条
+			*/
+			
+			
+			
+			var canvas = document.getElementById("canvas");
+			var context = canvas.getContext("2d");
+			var window_width = window.innerWidth;//浏览器窗口宽度
+			var window_height = window.innerHeight;//浏览器窗口高度
+			canvas.width = window_width;
+			canvas.height = window_height;
+			
+			var dots = [];//用来存放圆	画布中心
+			var centerX = window_width/2,		
+				centerY = window_height/2;						
+			canvas.addEventListener('mousemove',hover,false);
+			
+			function hover(e){
+				centerX = e.clientX;
+				centerY = e.clientY;
+
+			}
+			window.onresize = function(){	//监听浏览器窗口的变化，实现自适应宽高
+				canvas.width = window.innerWidth;
+				canvas.height = window.innerHeight;
+			}
+			//用面向对象，每个小圆都是一个具体的示例
+			//创建圆形类
+			function Dot(){
+				//圆形坐标	this指向Dot
+				this.x = Math.random()*window_width;  //生成一个随机数，不超过画布宽高
+				this.y = Math.random()*window_height;
+				
+				//坐标更改的速度值
+				this.vx = Math.random() - 0.5; //生成-0.5至0.5的值
+				this.vy = Math.random() - 0.5;//同上
+				
+				//圆形半径
+				this.r = 2;  
+				//圆的颜色
+				this.color = color1();
+				
+				//绘制圆，因为所有的示例都得用，所以写在prototype上实现共享
+				Dot.prototype.draw = function(){
+					context.beginPath();
+					context.fillStyle = this.color;
+					context.arc(this.x,this.y,this.r,0,Math.PI*2,false);
+					context.fill();
+					this.update();//更新坐标，绘制完成就更新坐标
+				}
+				//圆移动的方法，也是每个示例都要用所以写在prototype上
+				Dot.prototype.update = function(){
+					//判断是否超过画布，不在画布里面，如果要超出画布则反弹
+					if(this.x < 0 || this.x > window_width){
+						this.vx = -this.vx;   //那么速度取反，让它回去
+					}
+					if(this.y <0 || this.y > window_height){
+						this.vy = -this.vy;  //同上
+					}
+					
+					//更新坐标
+					this.x += this.vx;
+					this.y += this.vy;
+					
+				}
+			};
+			
+			//实例化一个圆形
+			//var dot = new Dot();		console.log(dot);
+			//调用绘制方法开始绘制圆  dot.draw();	
+			
+			//生成500个随机圆
+			for(var i=0;i<1000;i++){
+				dots.push(new Dot())
+			}
+			//console.log(dots)
+			//绘制圆
+			function drawDots(){
+				//每次绘制都清空之前的
+				
+				context.clearRect(0,0,window_width,window_height);
+				for(var i=0,len=dots.length;i<len;i++){	//如果直接写i<dots.length的话，那每一次执行都会去计算dots的长度
+					dots[i].draw();		//面向对象绘制圆
+					/*if(Math.abs(dots[i].x-centerX)<100 && Math.abs(dots[i].y-centerY)<100){	//距离小于100的连线
+						context.beginPath();
+						context.moveTo(centerX,centerY);
+						context.lineTo(dots[i].x,dots[i].y);
+						context.strokeStyle = "#aaa"
+						context.stroke()
+						
+					}*/
+					if(Math.abs(dots[i].x-centerX)<20 && Math.abs(dots[i].y-centerY)<20 ){
+						dots.forEach(function(item,index,list){
+							if(Math.abs(item.x-dots[i].x)<50 && Math.abs(item.y-dots[i].y)<50){
+								
+								context.beginPath();
+								context.moveTo(item.x,item.y);
+								var strokecolor = context.createLinearGradient(dots[i].x,dots[i].y,item.x,item.y);
+								strokecolor.addColorStop(0,dots[i].color);
+								strokecolor.addColorStop(1,item.color)
+								context.lineTo(dots[i].x,dots[i].y);	
+								context.strokeStyle = strokecolor;
+								context.stroke();
+							}	
+						})
+					}
+					
+				}								
+				
+				
+
+				
+			}
+				
+			setInterval(drawDots,30)
+			
+			
+			//生成随机颜色;
+			function color1(){  //rgb
+				var r = Math.floor(Math.random()*256);//0-255之间
+				var g = Math.floor(Math.random()*256);
+				var b = Math.floor(Math.random()*256);
+				return "rgb("+r+","+g+","+b+")";
+			}
+		/*	
+			//位运算创建16进制的随机颜色
+			//颜色值最大16进制为#ffffff,
+			//ffffff转为十进制为16777216 ,在转为二进制1后面24个0
+			//1<<24  位1后面24个0，位移24位，随机数取0-到ffffff的十进制
+			//~~为取整，再用toString转为16进制就变成了16进制的颜色值。
+			function color2(){
+				return "#" + (~~(Math.random()*(1<<24))).toString(16);
+				//可能会产生小于6位的
+			}
+			
+			//16进制
+			function color3(){
+				return "#" + function(color){//形参
+					//返回一个符合标准的6位的16进制的颜色值。
+					
+				}((Math.random()*0x1000000 << 0).toString(16));//加括号，匿名函数立即调用	//传入实参
+			}		//这里的实参跟上面差不多，可能会出现5位数的颜色值
+	
+	*/
+			/*
+			 剩下的
+			 1 先确定一个中心点
+			 var centerX = w/2;
+			 2 中心店和所有圆的圆心坐标比较，如果在100距离之内，就连线
+			 3moveTo(第一个圆的圆心坐标)  lineTo(第二个圆的圆心坐标)
+			 4中心点坐标跟随鼠标移动
+			 centerX = ev.clientX 
+			 */
+		
+		</script>
+	</body>
+</html>
